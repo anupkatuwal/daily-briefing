@@ -38,6 +38,6 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GOOGLE_CREDENTIALS_PATH: credentials.json
-          RECIPIENT_EMAIL: ${{ secrets.RECIPIENT_EMAIL }}
+          RECIPIENT_EMAIL: katuwalanup@gmail.com
           NEWS_RSS_FEEDS: https://feeds.bbci.co.uk/news/rss.xml,https://rss.cnn.com/rss/edition.rss
         run: python3 briefing.py
