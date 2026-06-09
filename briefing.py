@@ -39,7 +39,7 @@ def run():
         f.write(briefing)
     print(f"Saved to {output_path}")
 
-    recipient = os.environ.get("RECIPIENT_EMAIL", "katuwalanup@gmail.com")
+    recipient = os.environ.get("RECIPIENT_EMAIL") or "katuwalanup@gmail.com"
     send_briefing(briefing, recipient)
 
 
