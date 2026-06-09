@@ -29,13 +29,14 @@ def fetch_emails() -> list[dict]:
             userId="me",
             id=msg["id"],
             format="metadata",
-            metadataHeaders=["Subject", "From", "Date"],
+            metadataHeaders=["Subject", "From", "Date", "Message-ID"],
         ).execute()
         headers = {h["name"]: h["value"] for h in detail["payload"]["headers"]}
         emails.append(
             {
                 "id": msg["id"],
                 "thread_id": detail.get("threadId", msg["id"]),
+                "message_id": headers.get("Message-ID", ""),
                 "subject": headers.get("Subject", "(no subject)"),
                 "from": headers.get("From", ""),
                 "date": headers.get("Date", ""),

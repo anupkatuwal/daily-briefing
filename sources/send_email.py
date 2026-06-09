@@ -43,13 +43,14 @@ def _email_cards_html(emails: list[dict]) -> str:
     if not emails:
         return "<p style='color:#666;'>No unread emails.</p>"
     cards = []
-    for e in emails:
+    for i, e in enumerate(emails, 1):
         name = _extract_sender_name(e["from"])
         gmail = _gmail_url(e["id"])
         reply = _reply_url(e["from"], e["subject"])
         snippet = e["snippet"][:160] + ("…" if len(e["snippet"]) > 160 else "")
         cards.append(f"""
 <div style="border:1px solid #e0e0e0;border-radius:8px;padding:14px 16px;margin:8px 0;">
+  <div style="font-size:11px;color:#aaa;margin-bottom:2px;">EMAIL #{i}</div>
   <div style="font-size:13px;color:#555;margin-bottom:2px;">{name}</div>
   <div style="font-weight:600;margin-bottom:6px;">{e['subject']}</div>
   <div style="font-size:13px;color:#444;margin-bottom:10px;">{snippet}</div>
@@ -142,11 +143,12 @@ def send_briefing(briefing_text: str, emails: list[dict], news: list[dict], to: 
              border-bottom:1px solid #eee;padding-bottom:6px;">
     Email Quick Actions
   </h3>
-  <p style="font-size:12px;color:#888;margin:0 0 10px;">
-    Click <strong>View in Gmail</strong> to open &bull;
-    <strong>Reply</strong> to compose a reply &bull;
-    <strong>Delete</strong> opens the email where you can trash it
-  </p>
+  <div style="background:#f0f4ff;border-radius:8px;padding:12px 16px;margin-bottom:12px;font-size:13px;">
+    <strong>Reply to this email</strong> with instructions and Claude will act on them. Examples:<br>
+    &bull; <em>Reply to email 2 saying: Thanks, I'll confirm by Friday</em><br>
+    &bull; <em>Delete email 3</em><br>
+    &bull; <em>Reply to the GitHub email saying: Will fix this today</em>
+  </div>
   {email_cards}
 
   <h3 style="color:#1a1a2e;margin-top:28px;margin-bottom:8px;

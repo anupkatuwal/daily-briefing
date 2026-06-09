@@ -1,0 +1,42 @@
+name: Process Briefing Replies
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'  # Every 5 minutes
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  process:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Write Google credentials file
+        env:
+          CREDS: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
+        run: printf '%s' "$CREDS" > credentials.json
+
+      - name: Write Google OAuth token
+        env:
+          TOKEN: ${{ secrets.GOOGLE_TOKEN_JSON }}
+        run: printf '%s' "$TOKEN" > token.json
+
+      - name: Process replies
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GOOGLE_CREDENTIALS_PATH: credentials.json
+        run: python3 processor.py
