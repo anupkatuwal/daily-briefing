@@ -34,6 +34,8 @@ def fetch_emails() -> list[dict]:
         headers = {h["name"]: h["value"] for h in detail["payload"]["headers"]}
         emails.append(
             {
+                "id": msg["id"],
+                "thread_id": detail.get("threadId", msg["id"]),
                 "subject": headers.get("Subject", "(no subject)"),
                 "from": headers.get("From", ""),
                 "date": headers.get("Date", ""),

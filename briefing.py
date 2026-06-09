@@ -40,7 +40,7 @@ def run():
     print(f"Saved to {output_path}")
 
     recipient = os.environ.get("RECIPIENT_EMAIL") or "katuwalanup@gmail.com"
-    send_briefing(briefing, recipient)
+    send_briefing(briefing, emails, news, recipient)
 
 
 if __name__ == "__main__":
