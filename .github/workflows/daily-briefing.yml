@@ -5,6 +5,9 @@ on:
     - cron: '15 4 * * *'  # 10:00 AM Nepal Time (UTC+5:45)
   workflow_dispatch:        # Allow manual trigger from GitHub UI
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   briefing:
     runs-on: ubuntu-latest
@@ -22,10 +25,14 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Write Google credentials file
-        run: echo '${{ secrets.GOOGLE_CREDENTIALS_JSON }}' > credentials.json
+        env:
+          CREDS: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
+        run: printf '%s' "$CREDS" > credentials.json
 
       - name: Write Google OAuth token
-        run: echo '${{ secrets.GOOGLE_TOKEN_JSON }}' > token.json
+        env:
+          TOKEN: ${{ secrets.GOOGLE_TOKEN_JSON }}
+        run: printf '%s' "$TOKEN" > token.json
 
       - name: Run daily briefing
         env:
