@@ -6,8 +6,10 @@ from googleapiclient.discovery import build
 from .google_auth import get_creds
 
 
-def _service():
-    return build("gmail", "v1", credentials=get_creds())
+def _service(token_path=None):
+    # Default (no token_path) is the primary account, which sends/receives the briefing
+    creds = get_creds(token_path) if token_path else get_creds()
+    return build("gmail", "v1", credentials=creds)
 
 
 def find_briefing_replies() -> list[dict]:
@@ -51,8 +53,8 @@ def _extract_plain_text(message: dict) -> str:
 
 
 def send_reply(target: dict, reply_text: str) -> None:
-    """Send a reply to a specific email on behalf of the user."""
-    svc = _service()
+    """Send a reply to a specific email on behalf of the account that received it."""
+    svc = _service(target.get("token_path"))
     addr = _addr(target["from"])
     subject = target["subject"]
     if not subject.lower().startswith("re:"):
@@ -73,8 +75,8 @@ def send_reply(target: dict, reply_text: str) -> None:
     print(f"Replied to {addr}")
 
 
-def trash_message(message_id: str) -> None:
-    _service().users().messages().trash(userId="me", id=message_id).execute()
+def trash_message(message_id: str, token_path=None) -> None:
+    _service(token_path).users().messages().trash(userId="me", id=message_id).execute()
     print(f"Trashed {message_id}")
 
 

@@ -1,4 +1,5 @@
 import os
+import sys
 from pathlib import Path
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -13,31 +14,45 @@ SCOPES = [
     "https://www.googleapis.com/auth/calendar.readonly",
 ]
 
-TOKEN_PATH = Path(__file__).parent.parent / "token.json"
+PROJECT_ROOT = Path(__file__).parent.parent
+TOKEN_PATH = PROJECT_ROOT / "token.json"
 
 
-def get_creds() -> Credentials:
+def get_creds(token_path: Path | str = TOKEN_PATH) -> Credentials:
+    """Return credentials for one Google account, cached at token_path."""
+    token_path = Path(token_path)
+    if not token_path.is_absolute():
+        token_path = PROJECT_ROOT / token_path
     creds = None
-    if TOKEN_PATH.exists():
-        creds = Credentials.from_authorized_user_file(str(TOKEN_PATH), SCOPES)
+    if token_path.exists():
+        creds = Credentials.from_authorized_user_file(str(token_path), SCOPES)
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
-        elif TOKEN_PATH.exists():
+        elif token_path.exists():
             # Token exists but scopes changed — delete and re-auth interactively
             raise RuntimeError(
-                "Token scopes changed. Run 'python3 briefing.py' in a terminal once to re-authorize."
+                f"Token scopes changed for {token_path.name}. "
+                f"Run 'python3 -m sources.google_auth {token_path}' once to re-authorize."
             )
         else:
             # No token at all — must be run interactively
-            import sys
             if not sys.stdout.isatty():
                 raise RuntimeError(
-                    "No OAuth token found. Run 'python3 briefing.py' in a terminal once to authorize."
+                    f"No OAuth token at {token_path}. "
+                    f"Run 'python3 -m sources.google_auth {token_path}' once to authorize."
                 )
             flow = InstalledAppFlow.from_client_secrets_file(
                 os.environ["GOOGLE_CREDENTIALS_PATH"], SCOPES
             )
             creds = flow.run_local_server(port=0)
-        TOKEN_PATH.write_text(creds.to_json())
+        token_path.parent.mkdir(parents=True, exist_ok=True)
+        token_path.write_text(creds.to_json())
     return creds
+
+
+if __name__ == "__main__":
+    # Authorize an account interactively: python3 -m sources.google_auth tokens/token_secondary.json
+    path = sys.argv[1] if len(sys.argv) > 1 else str(TOKEN_PATH)
+    get_creds(path)
+    print(f"Token saved to {path}")

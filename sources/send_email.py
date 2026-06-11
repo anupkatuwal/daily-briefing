@@ -48,9 +48,10 @@ def _email_cards_html(emails: list[dict]) -> str:
         gmail = _gmail_url(e["id"])
         reply = _reply_url(e["from"], e["subject"])
         snippet = e["snippet"][:160] + ("…" if len(e["snippet"]) > 160 else "")
+        acct = f" &middot; {e['account']}" if e.get("account") else ""
         cards.append(f"""
 <div style="border:1px solid #e0e0e0;border-radius:8px;padding:14px 16px;margin:8px 0;">
-  <div style="font-size:11px;color:#aaa;margin-bottom:2px;">EMAIL #{i}</div>
+  <div style="font-size:11px;color:#aaa;margin-bottom:2px;">EMAIL #{i}{acct}</div>
   <div style="font-size:13px;color:#555;margin-bottom:2px;">{name}</div>
   <div style="font-weight:600;margin-bottom:6px;">{e['subject']}</div>
   <div style="font-size:13px;color:#444;margin-bottom:10px;">{snippet}</div>

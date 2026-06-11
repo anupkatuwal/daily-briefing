@@ -2,7 +2,10 @@ name: Daily Briefing
 
 on:
   schedule:
-    - cron: '15 4 * * *'  # 10:00 AM Nepal Time (UTC+5:45)
+    # Target send time: 04:15 UTC = 10:00 AM Nepal Time (UTC+5:45).
+    # GitHub fires scheduled runs late (hours, on this repo), so we queue the
+    # run early at 01:45 UTC and a "wait" step below holds it until 04:15 UTC.
+    - cron: '45 1 * * *'
   workflow_dispatch:        # Allow manual trigger from GitHub UI
 
 env:
@@ -13,6 +16,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Wait until 04:15 UTC (10:00 AM Nepal Time, UTC+5:45)
+        if: github.event_name == 'schedule'
+        run: |
+          target=$(date -u -d "today 04:15" +%s)
+          now=$(date -u +%s)
+          if [ "$now" -lt "$target" ]; then
+            echo "Sleeping $((target - now))s until 04:15 UTC"
+            sleep $((target - now))
+          else
+            echo "Past 04:15 UTC already (run was delayed) — sending immediately"
+          fi
+
       - name: Checkout code
         uses: actions/checkout@v5
 
@@ -34,10 +49,21 @@ jobs:
           TOKEN: ${{ secrets.GOOGLE_TOKEN_JSON }}
         run: printf '%s' "$TOKEN" > token.json
 
+      - name: Write secondary Gmail token (optional)
+        env:
+          TOKEN2: ${{ secrets.GOOGLE_TOKEN_SECONDARY_JSON }}
+        run: |
+          if [ -n "$TOKEN2" ]; then
+            mkdir -p tokens
+            printf '%s' "$TOKEN2" > tokens/token_secondary.json
+          fi
+
       - name: Run daily briefing
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GOOGLE_CREDENTIALS_PATH: credentials.json
           RECIPIENT_EMAIL: katuwalanup@gmail.com
           NEWS_RSS_FEEDS: https://feeds.bbci.co.uk/news/rss.xml,https://rss.cnn.com/rss/edition.rss
+          # Accounts whose token file is missing are skipped with a warning
+          GMAIL_ACCOUNTS: Primary:token.json,Secondary:tokens/token_secondary.json
         run: python3 briefing.py

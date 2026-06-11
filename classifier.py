@@ -10,7 +10,8 @@ def generate_briefing(emails: list[dict], events: list[dict], news: list[dict]) 
     client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 
     email_block = "\n".join(
-        f"- From: {e['from']}\n  Subject: {e['subject']}\n  Preview: {e['snippet']}"
+        f"- Account: {e.get('account', 'Primary')}\n  From: {e['from']}\n"
+        f"  Subject: {e['subject']}\n  Preview: {e['snippet']}"
         for e in emails
     ) or "No unread emails."
 

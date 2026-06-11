@@ -17,7 +17,7 @@ from sources.gmail_actions import (
 
 def parse_instruction(client: anthropic.Anthropic, instruction: str, emails: list[dict]) -> list[dict]:
     email_list = "\n".join(
-        f"{i + 1}. From: {e['from']}  |  Subject: {e['subject']}"
+        f"{i + 1}. [{e.get('account', 'Primary')}] From: {e['from']}  |  Subject: {e['subject']}"
         for i, e in enumerate(emails)
     )
     prompt = f"""The user has these unread emails (numbered):
@@ -87,7 +87,7 @@ def process():
                     confirmations.append(f"No reply message found for email #{idx}.")
 
             elif action["type"] == "delete":
-                trash_message(target["id"])
+                trash_message(target["id"], target.get("token_path"))
                 confirmations.append(f"Deleted email #{idx}: {target['subject']}")
 
             else:

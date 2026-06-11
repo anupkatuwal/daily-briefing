@@ -2,7 +2,9 @@ name: Process Briefing Replies
 
 on:
   schedule:
-    - cron: '*/5 * * * *'  # Every 5 minutes
+    # Every 30 min. The previous */5 (288 events/day) got this repo's
+    # scheduled events throttled by GitHub, delaying the daily briefing by hours.
+    - cron: '*/30 * * * *'
   workflow_dispatch:
 
 env:
