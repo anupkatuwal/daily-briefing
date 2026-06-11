@@ -12,12 +12,12 @@ def gmail_accounts() -> list[dict]:
     """Accounts to aggregate, from GMAIL_ACCOUNTS env var.
 
     Format: comma-separated "Name:path/to/token.json" pairs, e.g.
-      GMAIL_ACCOUNTS=Primary:token.json,Secondary:tokens/token_secondary.json
-    Defaults to the single primary account (token.json).
+      GMAIL_ACCOUNTS=Primary:tokens/token_primary.json,Secondary:tokens/token_secondary.json
+    Defaults to the single primary account (tokens/token_primary.json).
     """
     raw = os.environ.get("GMAIL_ACCOUNTS", "").strip()
     if not raw:
-        return [{"name": "Primary", "token_path": "token.json"}]
+        return [{"name": "Primary", "token_path": "tokens/token_primary.json"}]
     accounts = []
     for entry in raw.split(","):
         name, _, token_path = entry.strip().partition(":")

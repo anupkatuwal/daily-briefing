@@ -35,10 +35,23 @@ jobs:
       - name: Write Google OAuth token
         env:
           TOKEN: ${{ secrets.GOOGLE_TOKEN_JSON }}
-        run: printf '%s' "$TOKEN" > token.json
+        run: |
+          mkdir -p tokens
+          printf '%s' "$TOKEN" > tokens/token_primary.json
+
+      - name: Write secondary Gmail token (optional)
+        env:
+          TOKEN2: ${{ secrets.GOOGLE_TOKEN_SECONDARY_JSON }}
+        run: |
+          if [ -n "$TOKEN2" ]; then
+            mkdir -p tokens
+            printf '%s' "$TOKEN2" > tokens/token_secondary.json
+          fi
 
       - name: Process replies
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GOOGLE_CREDENTIALS_PATH: credentials.json
+          # Accounts whose token file is missing are skipped with a warning
+          GMAIL_ACCOUNTS: Primary:tokens/token_primary.json,Secondary:tokens/token_secondary.json
         run: python3 processor.py

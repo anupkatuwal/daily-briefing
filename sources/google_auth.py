@@ -15,7 +15,7 @@ SCOPES = [
 ]
 
 PROJECT_ROOT = Path(__file__).parent.parent
-TOKEN_PATH = PROJECT_ROOT / "token.json"
+TOKEN_PATH = PROJECT_ROOT / "tokens" / "token_primary.json"
 
 
 def get_creds(token_path: Path | str = TOKEN_PATH) -> Credentials:

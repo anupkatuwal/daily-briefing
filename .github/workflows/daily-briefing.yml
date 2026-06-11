@@ -47,7 +47,9 @@ jobs:
       - name: Write Google OAuth token
         env:
           TOKEN: ${{ secrets.GOOGLE_TOKEN_JSON }}
-        run: printf '%s' "$TOKEN" > token.json
+        run: |
+          mkdir -p tokens
+          printf '%s' "$TOKEN" > tokens/token_primary.json
 
       - name: Write secondary Gmail token (optional)
         env:
@@ -65,5 +67,5 @@ jobs:
           RECIPIENT_EMAIL: katuwalanup@gmail.com
           NEWS_RSS_FEEDS: https://feeds.bbci.co.uk/news/rss.xml,https://rss.cnn.com/rss/edition.rss
           # Accounts whose token file is missing are skipped with a warning
-          GMAIL_ACCOUNTS: Primary:token.json,Secondary:tokens/token_secondary.json
+          GMAIL_ACCOUNTS: Primary:tokens/token_primary.json,Secondary:tokens/token_secondary.json
         run: python3 briefing.py
