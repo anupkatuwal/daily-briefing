@@ -64,7 +64,7 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GOOGLE_CREDENTIALS_PATH: credentials.json
-          RECIPIENT_EMAIL: katuwalanup@gmail.com
+          RECIPIENT_EMAIL: ${{ secrets.RECIPIENT_EMAIL }}
           NEWS_RSS_FEEDS: https://feeds.bbci.co.uk/news/rss.xml,https://rss.cnn.com/rss/edition.rss
           # Accounts whose token file is missing are skipped with a warning
           GMAIL_ACCOUNTS: Primary:tokens/token_primary.json,Secondary:tokens/token_secondary.json

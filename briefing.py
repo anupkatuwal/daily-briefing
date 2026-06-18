@@ -39,7 +39,9 @@ def run():
         f.write(briefing)
     print(f"Saved to {output_path}")
 
-    recipient = os.environ.get("RECIPIENT_EMAIL") or "katuwalanup@gmail.com"
+    recipient = os.environ.get("RECIPIENT_EMAIL")
+    if not recipient:
+        raise RuntimeError("RECIPIENT_EMAIL environment variable is required")
     send_briefing(briefing, emails, news, recipient)
 
 
