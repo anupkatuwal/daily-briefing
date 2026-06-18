@@ -2,10 +2,10 @@ name: Daily Briefing
 
 on:
   schedule:
-    # Target send time: 04:15 UTC = 10:00 AM Nepal Time (UTC+5:45).
+    # Target send time: 03:15 UTC = 9:00 AM Nepal Time (UTC+5:45).
     # GitHub fires scheduled runs late (hours, on this repo), so we queue the
-    # run early at 01:45 UTC and a "wait" step below holds it until 04:15 UTC.
-    - cron: '45 1 * * *'
+    # run early at 00:45 UTC and a "wait" step below holds it until 03:15 UTC.
+    - cron: '45 0 * * *'
   workflow_dispatch:        # Allow manual trigger from GitHub UI
 
 env:
@@ -16,16 +16,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Wait until 04:15 UTC (10:00 AM Nepal Time, UTC+5:45)
+      - name: Wait until 03:15 UTC (9:00 AM Nepal Time, UTC+5:45)
         if: github.event_name == 'schedule'
         run: |
-          target=$(date -u -d "today 04:15" +%s)
+          target=$(date -u -d "today 03:15" +%s)
           now=$(date -u +%s)
           if [ "$now" -lt "$target" ]; then
-            echo "Sleeping $((target - now))s until 04:15 UTC"
+            echo "Sleeping $((target - now))s until 03:15 UTC"
             sleep $((target - now))
           else
-            echo "Past 04:15 UTC already (run was delayed) — sending immediately"
+            echo "Past 03:15 UTC already (run was delayed) — sending immediately"
           fi
 
       - name: Checkout code
