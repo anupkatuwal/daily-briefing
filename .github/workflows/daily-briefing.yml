@@ -1,0 +1,71 @@
+name: Daily Briefing
+
+on:
+  schedule:
+    # Target send time: 03:15 UTC = 9:00 AM Nepal Time (UTC+5:45).
+    # GitHub fires scheduled runs late (hours, on this repo), so we queue the
+    # run early at 00:45 UTC and a "wait" step below holds it until 03:15 UTC.
+    - cron: '45 0 * * *'
+  workflow_dispatch:        # Allow manual trigger from GitHub UI
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  briefing:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Wait until 03:15 UTC (9:00 AM Nepal Time, UTC+5:45)
+        if: github.event_name == 'schedule'
+        run: |
+          target=$(date -u -d "today 03:15" +%s)
+          now=$(date -u +%s)
+          if [ "$now" -lt "$target" ]; then
+            echo "Sleeping $((target - now))s until 03:15 UTC"
+            sleep $((target - now))
+          else
+            echo "Past 03:15 UTC already (run was delayed) — sending immediately"
+          fi
+
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Write Google credentials file
+        env:
+          CREDS: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
+        run: printf '%s' "$CREDS" > credentials.json
+
+      - name: Write Google OAuth token
+        env:
+          TOKEN: ${{ secrets.GOOGLE_TOKEN_JSON }}
+        run: |
+          mkdir -p tokens
+          printf '%s' "$TOKEN" > tokens/token_primary.json
+
+      - name: Write secondary Gmail token (optional)
+        env:
+          TOKEN2: ${{ secrets.GOOGLE_TOKEN_SECONDARY_JSON }}
+        run: |
+          if [ -n "$TOKEN2" ]; then
+            mkdir -p tokens
+            printf '%s' "$TOKEN2" > tokens/token_secondary.json
+          fi
+
+      - name: Run daily briefing
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GOOGLE_CREDENTIALS_PATH: credentials.json
+          RECIPIENT_EMAIL: ${{ secrets.RECIPIENT_EMAIL }}
+          NEWS_RSS_FEEDS: https://feeds.bbci.co.uk/news/rss.xml,https://rss.cnn.com/rss/edition.rss
+          # Accounts whose token file is missing are skipped with a warning
+          GMAIL_ACCOUNTS: Primary:tokens/token_primary.json,Secondary:tokens/token_secondary.json
+        run: python3 briefing.py

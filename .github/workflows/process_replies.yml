@@ -1,0 +1,57 @@
+name: Process Briefing Replies
+
+on:
+  schedule:
+    # Every 30 min. The previous */5 (288 events/day) got this repo's
+    # scheduled events throttled by GitHub, delaying the daily briefing by hours.
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  process:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Write Google credentials file
+        env:
+          CREDS: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
+        run: printf '%s' "$CREDS" > credentials.json
+
+      - name: Write Google OAuth token
+        env:
+          TOKEN: ${{ secrets.GOOGLE_TOKEN_JSON }}
+        run: |
+          mkdir -p tokens
+          printf '%s' "$TOKEN" > tokens/token_primary.json
+
+      - name: Write secondary Gmail token (optional)
+        env:
+          TOKEN2: ${{ secrets.GOOGLE_TOKEN_SECONDARY_JSON }}
+        run: |
+          if [ -n "$TOKEN2" ]; then
+            mkdir -p tokens
+            printf '%s' "$TOKEN2" > tokens/token_secondary.json
+          fi
+
+      - name: Process replies
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GOOGLE_CREDENTIALS_PATH: credentials.json
+          # Accounts whose token file is missing are skipped with a warning
+          GMAIL_ACCOUNTS: Primary:tokens/token_primary.json,Secondary:tokens/token_secondary.json
+        run: python3 processor.py
