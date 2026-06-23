@@ -139,7 +139,10 @@ def main():
     print(f"\n✓ Wrote {out_path}")
 
     from send_email import send_briefing
-    send_briefing(briefing_md, date_str)
+    try:
+        send_briefing(briefing_md, date_str)
+    except Exception as e:
+        print(f"[warn] email failed: {e}", file=sys.stderr)
 
 
 if __name__ == "__main__":
