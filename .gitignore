@@ -1,5 +1,6 @@
 venv/
 .env
+.DS_Store
 google_token*.json
 ms_token_cache*.json
 google_credentials.json
