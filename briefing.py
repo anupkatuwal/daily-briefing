@@ -72,6 +72,7 @@ def build_markdown(result: dict, date_str: str) -> str:
     other_md = "_Nothing._" if not other else "\n".join(
         f"- _{e.get('from','')}_ — {e.get('subject','')}" for e in other
     )
+    cal_summary_md = f"\n_{cal_summary}_" if cal_summary else ""
 
     return f"""# Daily Briefing — {date_str}
 
@@ -80,7 +81,7 @@ def build_markdown(result: dict, date_str: str) -> str:
 
 ## 📅 CALENDAR
 {result.get("_calendar_md", "_(no calendar)_")}
-{f"\n_{cal_summary}_" if cal_summary else ""}
+{cal_summary_md}
 
 ## 💰 FINANCE
 {fmt_emails(emails, "Finance")}
