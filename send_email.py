@@ -1,4 +1,5 @@
 """Send the daily briefing as an HTML email via Gmail SMTP."""
+import html as _html
 import os
 import smtplib
 from email.mime.multipart import MIMEMultipart
@@ -22,7 +23,7 @@ def send_briefing(markdown_text: str, date_str: str) -> None:
         import markdown as md
         html_body = md.markdown(markdown_text, extensions=["tables", "fenced_code"])
     except ImportError:
-        html_body = "<pre>" + markdown_text + "</pre>"
+        html_body = "<pre>" + _html.escape(markdown_text) + "</pre>"
 
     msg = MIMEMultipart("alternative")
     msg["Subject"] = f"Daily Briefing — {date_str}"

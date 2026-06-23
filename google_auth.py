@@ -13,6 +13,7 @@ cached in google_token.json (legacy behaviour).
 """
 import os
 import re
+import stat
 from pathlib import Path
 
 from google.auth.transport.requests import Request
@@ -57,6 +58,7 @@ def get_credentials(account: str = "") -> Credentials:
     if creds and creds.expired and creds.refresh_token:
         creds.refresh(Request())
         token_path.write_text(creds.to_json())
+        token_path.chmod(stat.S_IRUSR | stat.S_IWUSR)
         return creds
     if not CREDS_PATH or not Path(CREDS_PATH).exists():
         raise FileNotFoundError(
@@ -72,6 +74,7 @@ def get_credentials(account: str = "") -> Credentials:
     creds = flow.run_local_server(port=0, **kwargs)
     print(f"  >>> Sign-in complete for: {label}", flush=True)
     token_path.write_text(creds.to_json())
+    token_path.chmod(stat.S_IRUSR | stat.S_IWUSR)
     return creds
 
 

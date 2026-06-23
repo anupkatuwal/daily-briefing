@@ -18,6 +18,7 @@ import re
 import sys
 import json
 import atexit
+import stat
 from pathlib import Path
 
 import msal
@@ -51,7 +52,11 @@ def _load_cache(account: str) -> msal.SerializableTokenCache:
     path = _cache_path(account)
     if path.exists():
         cache.deserialize(path.read_text())
-    atexit.register(lambda: path.write_text(cache.serialize()) if cache.has_state_changed else None)
+    def _save():
+        if cache.has_state_changed:
+            path.write_text(cache.serialize())
+            path.chmod(stat.S_IRUSR | stat.S_IWUSR)
+    atexit.register(_save)
     return cache
 
 
