@@ -1,0 +1,8 @@
+venv/
+.env
+google_token*.json
+ms_token_cache*.json
+google_credentials.json
+__pycache__/
+*.pyc
+output/
