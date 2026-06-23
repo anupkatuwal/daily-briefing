@@ -43,7 +43,9 @@ def fmt_emails(emails: list[dict], category: str) -> str:
     out = []
     for e in rows:
         stars = "★" * e.get("importance", 1)
-        line = f"- **{e.get('subject','(no subject)')}** — _{e.get('from','')}_ {stars}\n  {e.get('one_line','')}"
+        inbox = e.get("account", "") or e.get("source", "")
+        inbox_tag = f" `[{inbox}]`" if inbox else ""
+        line = f"- **{e.get('subject','(no subject)')}** — _{e.get('from','')}_{inbox_tag} {stars}\n  {e.get('one_line','')}"
         for ai in e.get("action_items", []) or []:
             dl = f" _(due {ai['deadline']})_" if ai.get("deadline") else ""
             line += f"\n  - ☐ {ai['task']}{dl}"
@@ -70,7 +72,8 @@ def build_markdown(result: dict, date_str: str) -> str:
         "URGENT", "Finance", "College/Academic", "Work/Freelance", "Promotions"
     }]
     other_md = "_Nothing._" if not other else "\n".join(
-        f"- _{e.get('from','')}_ — {e.get('subject','')}" for e in other
+        f"- _{e.get('from','')}_ `[{e.get('account','') or e.get('source','')}]` — {e.get('subject','')}"
+        for e in other
     )
     cal_summary_md = f"\n_{cal_summary}_" if cal_summary else ""
 

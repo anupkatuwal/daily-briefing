@@ -20,6 +20,7 @@ Output ONLY valid JSON. No prose, no markdown fences. Schema:
       "from": str,
       "subject": str,
       "source": "gmail" | "outlook",
+      "account": str,   // the receiving inbox, copied verbatim from the input email's "account" field
       "category": "URGENT" | "Finance" | "College/Academic" | "Work/Freelance" | "Personal" | "Promotions",
       "importance": 1-5,
       "action_items": [ {"task": str, "deadline": str_or_empty} ],
@@ -33,6 +34,7 @@ Output ONLY valid JSON. No prose, no markdown fences. Schema:
 }
 
 Rules:
+- Always copy the "account" field from each input email into your output unchanged, so the reader knows which inbox (Gmail address / Outlook / Hotmail) received it.
 - Skip Promotions entirely (do not include them in the emails array).
 - importance 5 = act today; 1 = FYI.
 - action_items.deadline empty string if none.

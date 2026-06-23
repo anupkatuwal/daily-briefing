@@ -1,0 +1,28 @@
+name: Keep Alive
+
+# GitHub disables scheduled workflows after 60 days with no repo activity.
+# This makes a tiny automated commit every Monday so the Daily Briefing
+# schedule never gets silently turned off.
+
+on:
+  schedule:
+    - cron: '0 4 * * 1'  # 09:45 AM Nepal time every Monday
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Touch keepalive file and commit
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          date -u +"%Y-%m-%dT%H:%M:%SZ" > .keepalive
+          git add .keepalive
+          git commit -m "chore: keepalive [skip ci]" || echo "nothing to commit"
+          git push
