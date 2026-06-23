@@ -132,20 +132,29 @@ def fetch_calendar() -> list[dict]:
 
 # ---------- RSS ----------
 
-def fetch_news(top_n: int = 5) -> list[dict]:
+def fetch_news(per_feed: int = 5) -> list[dict]:
+    """Fetch top headlines from each configured feed and interleave them."""
     feeds = [f.strip() for f in os.environ.get("NEWS_RSS_FEEDS", "").split(",") if f.strip()]
-    items: list[dict] = []
+    buckets: list[list[dict]] = []
     for url in feeds:
         try:
             parsed = feedparser.parse(url)
-            for entry in parsed.entries[:top_n]:
-                items.append({
+            bucket = []
+            for entry in parsed.entries[:per_feed]:
+                bucket.append({
                     "title": entry.get("title", ""),
                     "link": entry.get("link", ""),
                     "summary": (entry.get("summary", "") or "")[:300],
                     "source": parsed.feed.get("title", url),
                 })
+            if bucket:
+                buckets.append(bucket)
         except Exception as e:
             print(f"[warn] feed failed {url}: {e}")
-    # Interleave so we get variety, then cap
-    return items[:top_n * 2]
+    # Interleave feeds so briefing has variety: US, Nepal, World, US, Nepal, World...
+    items: list[dict] = []
+    for i in range(per_feed):
+        for bucket in buckets:
+            if i < len(bucket):
+                items.append(bucket[i])
+    return items

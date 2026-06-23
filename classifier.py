@@ -37,7 +37,7 @@ Rules:
 - importance 5 = act today; 1 = FYI.
 - action_items.deadline empty string if none.
 - top_priorities are short imperative phrases like "Pay Chase by Dec 12" or "Review Q4 report (Sarah)".
-- news_bullets: tight one-line summaries (no links).
+- news_bullets: tight one-line summaries (no links). Prioritize Nepal and US stories first, then world.
 """
 
 
