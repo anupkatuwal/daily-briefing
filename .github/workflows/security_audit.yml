@@ -1,0 +1,35 @@
+name: Security Audit
+
+# Weekly health check: scans dependencies for known CVEs and verifies all
+# Python files still compile. Runs Monday mornings and on demand. A failure
+# here emails you via GitHub's normal Actions notification.
+
+on:
+  schedule:
+    - cron: '0 3 * * 1'  # 08:45 AM Nepal time, Mondays
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies + auditing tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pip-audit
+
+      - name: Scan dependencies for known vulnerabilities
+        run: pip-audit --strict --desc || (echo "::warning::pip-audit found advisories — review above" && exit 1)
+
+      - name: Verify all Python files compile
+        run: python -m compileall -q .
