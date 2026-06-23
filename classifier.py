@@ -29,7 +29,14 @@ Output ONLY valid JSON. No prose, no markdown fences. Schema:
     }
   ],
   "calendar_summary": str,
-  "news_bullets": [ str, str, str, str, str ],
+  "news_by_category": {
+    "Top Headlines": [ str ],
+    "US": [ str ],
+    "World": [ str ],
+    "Nepal": [ str ],
+    "Technology": [ str ],
+    "Entertainment": [ str ]
+  },
   "top_priorities": [ str ]   // 3-6 items, anything due today or marked URGENT
 }
 
@@ -39,7 +46,7 @@ Rules:
 - importance 5 = act today; 1 = FYI.
 - action_items.deadline empty string if none.
 - top_priorities are short imperative phrases like "Pay Chase by Dec 12" or "Review Q4 report (Sarah)".
-- news_bullets: tight one-line summaries (no links). Prioritize Nepal and US stories first, then world.
+- news_by_category: group the input news by its "category" field. For each category give 3-4 tight one-line summaries (no links, no source names). Keep the same category keys as the input. Drop a category only if it has no news.
 """
 
 

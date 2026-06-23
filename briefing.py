@@ -59,10 +59,18 @@ def fmt_priorities(p: list[str]) -> str:
     return "\n".join(f"- {item}" for item in p)
 
 
-def fmt_news(bullets: list[str]) -> str:
-    if not bullets:
+def fmt_news(news_by_category: dict) -> str:
+    if not news_by_category:
         return "_No headlines._"
-    return "\n".join(f"- {b}" for b in bullets)
+    # Preserve a sensible display order; include any extra categories at the end.
+    order = ["Top Headlines", "US", "World", "Nepal", "Technology", "Entertainment"]
+    cats = [c for c in order if news_by_category.get(c)]
+    cats += [c for c in news_by_category if c not in order and news_by_category.get(c)]
+    blocks = []
+    for cat in cats:
+        bullets = "\n".join(f"- {b}" for b in news_by_category[cat])
+        blocks.append(f"### {cat}\n{bullets}")
+    return "\n\n".join(blocks) if blocks else "_No headlines._"
 
 
 def build_markdown(result: dict, date_str: str) -> str:
@@ -96,7 +104,7 @@ def build_markdown(result: dict, date_str: str) -> str:
 {fmt_emails(emails, "Work/Freelance")}
 
 ## 📰 NEWS
-{fmt_news(result.get("news_bullets", []))}
+{fmt_news(result.get("news_by_category", {}))}
 
 ## 📥 EVERYTHING ELSE
 {other_md}

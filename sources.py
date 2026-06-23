@@ -132,29 +132,31 @@ def fetch_calendar() -> list[dict]:
 
 # ---------- RSS ----------
 
+# Category -> Google News RSS feed. Used when NEWS_RSS_FEEDS is not set.
+NEWS_FEEDS = {
+    "Top Headlines": "https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en",
+    "US": "https://news.google.com/rss/headlines/section/topic/NATION.en_US/United%20States?hl=en-US&gl=US&ceid=US:en",
+    "World": "https://news.google.com/rss/headlines/section/topic/WORLD?hl=en-US&gl=US&ceid=US:en",
+    "Nepal": "https://news.google.com/rss/search?q=Nepal&hl=en-US&gl=US&ceid=US:en",
+    "Technology": "https://news.google.com/rss/headlines/section/topic/TECHNOLOGY?hl=en-US&gl=US&ceid=US:en",
+    "Entertainment": "https://news.google.com/rss/headlines/section/topic/ENTERTAINMENT?hl=en-US&gl=US&ceid=US:en",
+}
+
+
 def fetch_news(per_feed: int = 5) -> list[dict]:
-    """Fetch top headlines from each configured feed and interleave them."""
-    feeds = [f.strip() for f in os.environ.get("NEWS_RSS_FEEDS", "").split(",") if f.strip()]
-    buckets: list[list[dict]] = []
-    for url in feeds:
+    """Fetch top headlines from each category feed, each tagged with its category."""
+    items: list[dict] = []
+    for category, url in NEWS_FEEDS.items():
         try:
             parsed = feedparser.parse(url)
-            bucket = []
             for entry in parsed.entries[:per_feed]:
-                bucket.append({
+                items.append({
+                    "category": category,
                     "title": entry.get("title", ""),
                     "link": entry.get("link", ""),
                     "summary": (entry.get("summary", "") or "")[:300],
                     "source": parsed.feed.get("title", url),
                 })
-            if bucket:
-                buckets.append(bucket)
         except Exception as e:
-            print(f"[warn] feed failed {url}: {e}")
-    # Interleave feeds so briefing has variety: US, Nepal, World, US, Nepal, World...
-    items: list[dict] = []
-    for i in range(per_feed):
-        for bucket in buckets:
-            if i < len(bucket):
-                items.append(bucket[i])
+            print(f"[warn] feed failed {category} {url}: {e}")
     return items
