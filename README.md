@@ -62,3 +62,8 @@ The workflows rebuild tokens from repository secrets:
 To add the secondary account in CI, paste the contents of its local token file into the
 `GOOGLE_TOKEN_SECONDARY_JSON` secret. For more than two accounts, add another secret
 write step and extend the `GMAIL_ACCOUNTS` env var in both workflow files.
+
+## 🔗 Portfolio
+
+Featured on my portfolio: **[https://anup-katuwal.com.np/projects/daily-briefing](https://anup-katuwal.com.np/projects/daily-briefing)**  
+More of my work → [anup-katuwal.com.np](https://anup-katuwal.com.np)
