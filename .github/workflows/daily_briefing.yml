@@ -2,15 +2,40 @@ name: Daily Briefing
 
 on:
   schedule:
-    # 8:30 AM Nepal Standard Time (UTC+5:45) = 2:45 AM UTC
-    - cron: '45 2 * * *'
-  workflow_dispatch:  # allow manual trigger from GitHub UI
+    # Target delivery: ~7:50 AM Nepal time (UTC+5:45).
+    # The cron time is NOT the send time: GitHub starts scheduled runs on this
+    # repo 3-4 hours late (observed: a 02:45 UTC cron produced 06:01-06:57 UTC
+    # emails = ~noon in Nepal). So we queue the run the evening before, at
+    # 21:45 UTC, and the "Hold" step below sleeps until 01:45 UTC (7:30 AM
+    # Nepal). Even a 4-hour start delay still lands the email before 8:30 AM.
+    - cron: '45 21 * * *'
+  workflow_dispatch:  # allow manual trigger from GitHub UI (skips the hold)
 
 jobs:
   briefing:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Hold until 01:45 UTC (7:30 AM Nepal time)
+        if: github.event_name == 'schedule'
+        run: |
+          # Queued 21:45 UTC for delivery the next morning. Before midnight
+          # UTC the target is tomorrow 01:45; after midnight it is today
+          # 01:45. If GitHub started us past the target, run immediately
+          # instead of waiting a whole day.
+          if [ "$(date -u +%H)" -ge 12 ]; then
+            target=$(date -u -d 'tomorrow 01:45' +%s)
+          else
+            target=$(date -u -d 'today 01:45' +%s)
+          fi
+          now=$(date -u +%s)
+          if [ "$now" -lt "$target" ]; then
+            echo "Sleeping $((target - now))s until 01:45 UTC"
+            sleep $((target - now))
+          else
+            echo "Started past 01:45 UTC (GitHub delay) — running immediately"
+          fi
+
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
