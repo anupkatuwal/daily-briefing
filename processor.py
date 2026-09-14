@@ -1,6 +1,8 @@
 import json
 import os
-import anthropic
+import re
+from google import genai
+from google.genai import types
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -15,7 +17,7 @@ from sources.gmail_actions import (
 )
 
 
-def parse_instruction(client: anthropic.Anthropic, instruction: str, emails: list[dict]) -> list[dict]:
+def parse_instruction(client: genai.Client, instruction: str, emails: list[dict]) -> list[dict]:
     email_list = "\n".join(
         f"{i + 1}. [{e.get('account', 'Primary')}] From: {e['from']}  |  Subject: {e['subject']}"
         for i, e in enumerate(emails)
@@ -37,14 +39,17 @@ Parse every action the user wants. Return ONLY a JSON array, no explanation:
 
 Match by email number, sender name, or subject keywords. If you cannot identify a target, set type to "unknown"."""
 
-    response = client.messages.create(
-        model="claude-opus-4-8",
-        max_tokens=600,
-        messages=[{"role": "user", "content": prompt}],
+    response = client.models.generate_content(
+        model=os.environ.get("GEMINI_MODEL") or "gemini-3.6-flash",
+        contents=prompt,
+        config=types.GenerateContentConfig(
+            max_output_tokens=2048,
+            response_mime_type="application/json",
+        ),
     )
-    text = response.content[0].text.strip()
+    text = (response.text or "").strip()
     # Extract JSON array even if wrapped in markdown
-    match = __import__("re").search(r"\[.*\]", text, __import__("re").DOTALL)
+    match = re.search(r"\[.*\]", text, re.DOTALL)
     if match:
         return json.loads(match.group())
     return []
@@ -61,7 +66,7 @@ def process():
         print("No emails to act on.")
         return
 
-    client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+    client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
     for reply in replies:
         print(f"Processing instruction: {reply['body'][:80]}")

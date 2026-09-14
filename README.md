@@ -1,7 +1,7 @@
 # Daily Briefing
 
 Sends a daily briefing email at **10:00 AM Nepal Time (04:15 UTC)** with unread Gmail
-across one or more accounts, today's calendar, and news headlines, summarized by Claude.
+across one or more accounts, today's calendar, and news headlines, summarized by Google Gemini.
 Runs on GitHub Actions ([.github/workflows/daily-briefing.yml](.github/workflows/daily-briefing.yml));
 replies to the briefing are processed every 30 minutes by
 [process_replies.yml](.github/workflows/process_replies.yml).
@@ -16,7 +16,7 @@ early at 01:45 UTC and a wait step holds the run until exactly 04:15 UTC
 
 1. `python3 -m venv venv && ./venv/bin/pip install -r requirements.txt`
 2. Copy a Google OAuth client (Desktop type) JSON and set `GOOGLE_CREDENTIALS_PATH` in `.env`.
-3. Set `ANTHROPIC_API_KEY`, `RECIPIENT_EMAIL`, and `NEWS_RSS_FEEDS` in `.env`.
+3. Set `GEMINI_API_KEY`, `RECIPIENT_EMAIL`, and `NEWS_RSS_FEEDS` in `.env`.
 4. Authorize the primary account (opens a browser):
 
    ```bash
