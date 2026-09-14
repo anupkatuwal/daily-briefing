@@ -1,7 +1,7 @@
 # Daily Briefing — Project Guide
 
 A personal daily briefing that reads your inboxes + calendar + news, summarizes
-with Claude, and emails you a styled briefing every morning. Runs entirely on
+with Google Gemini, and emails you a styled briefing every morning. Runs entirely on
 GitHub Actions (no local machine needed).
 
 ## Architecture
@@ -10,18 +10,20 @@ GitHub Actions (no local machine needed).
 |------|------|
 | `briefing.py` | Entry point. Orchestrates fetch → classify → render → email. |
 | `sources.py` | Fetches Gmail, Outlook/Hotmail, Google Calendar, Google News RSS. |
-| `classifier.py` | Sends everything to Claude, gets structured JSON back. |
+| `classifier.py` | Sends everything to Gemini, gets structured JSON back. |
 | `google_auth.py` | Google OAuth (Gmail + Calendar), read-only scopes. |
 | `ms_auth.py` | Microsoft Graph auth (Outlook/Hotmail), read-only scopes. |
 | `send_email.py` | Renders the briefing as a styled HTML email via Gmail SMTP. |
-| `.github/workflows/daily_briefing.yml` | Runs the briefing at 08:30 Nepal time daily. |
+| `.github/workflows/daily_briefing.yml` | Runs the briefing at 07:00 Nepal time daily. |
 | `.github/workflows/keepalive.yml` | Weekly commit so GitHub never disables the schedule. |
 | `.github/workflows/security_audit.yml` | Weekly CVE scan + compile check. |
 | `.github/dependabot.yml` | Auto-opens PRs for dependency + Action updates. |
 
 ## Schedule & delivery
 
-- **Runs:** 08:30 AM Nepal time (cron `45 2 * * *` UTC).
+- **Runs:** 07:00 AM Nepal time. Queued by cron `0 21 * * *` UTC the evening
+  before; the workflow's "Hold" step sleeps until 01:15 UTC (= 07:00 NPT) to
+  absorb GitHub's scheduled-run delay.
 - **From:** katuwalanup@gmail.com (Gmail SMTP, app password).
 - **To:** anup.katuwal2025@outlook.com (`BRIEFING_TO_EMAIL` secret).
 
@@ -32,7 +34,7 @@ GitHub Actions (no local machine needed).
 
 ## Secrets (GitHub → Settings → Secrets → Actions)
 
-`ANTHROPIC_API_KEY`, `GMAIL_ACCOUNTS`, `MS_CLIENT_ID`, `MS_ACCOUNTS`,
+`GEMINI_API_KEY`, `GMAIL_ACCOUNTS`, `MS_CLIENT_ID`, `MS_ACCOUNTS`,
 `GMAIL_SMTP_USER`, `GMAIL_SMTP_PASSWORD`, `BRIEFING_TO_EMAIL`,
 `GOOGLE_TOKEN_*` (per Gmail account, base64), `MS_TOKEN_CACHE_*` (per MS account, base64).
 
@@ -51,13 +53,23 @@ timer indefinitely. Do not delete it.
 
 ---
 
+## LLM provider
+
+The briefing is summarized by **Google Gemini** via the `google-genai` SDK.
+Model: `gemini-3.6-flash` by default, overridable with the `GEMINI_MODEL` env
+var; `classifier.py` falls back to older Flash ids if that one is retired.
+Get/rotate the key at https://aistudio.google.com/apikey.
+
+---
+
 ## Maintenance prompt (paste into Claude Code periodically)
 
 > Run a full health check on this daily-briefing project:
 > 1. Run `pip-audit --desc` and report any vulnerable dependencies, separating
 >    real app-runtime risks from build-only tooling (pip, setuptools).
 > 2. Run `python -m compileall -q .` to confirm everything still compiles.
-> 3. Check that all model IDs in `classifier.py` are current and supported.
+> 3. Check that the Gemini model IDs in `classifier.py` (`MODEL` + `FALLBACK_MODELS`)
+   are still current and supported.
 > 4. Review any open Dependabot PRs — for each, summarize what changed and
 >    whether it's safe to merge (breaking changes, changelog highlights).
 > 5. Check the last 5 GitHub Actions runs of `daily_briefing.yml` for silent
@@ -71,7 +83,8 @@ timer indefinitely. Do not delete it.
 ## Common tasks
 
 - **Add a news category:** edit `NEWS_FEEDS` in `sources.py`.
-- **Change send time:** edit the cron in `daily_briefing.yml` (UTC = NPT − 5:45).
+- **Change send time:** edit the `Hold` target time in `daily_briefing.yml`
+  (UTC = NPT − 5:45), and keep the cron a few hours earlier than that target.
 - **Change recipient:** update the `BRIEFING_TO_EMAIL` GitHub secret.
 - **Re-auth an account (token expired):** run locally, sign in, then re-upload
   the refreshed `google_token_*.json` / `ms_token_cache_*.json` as a base64 secret.

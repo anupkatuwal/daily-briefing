@@ -1,14 +1,20 @@
-"""Send everything to Claude in one prompt, get structured JSON back."""
+"""Send everything to Gemini in one prompt, get structured JSON back."""
 import json
 import os
 import re
+import sys
 
-from anthropic import Anthropic
+from google import genai
+from google.genai import types
 from dotenv import load_dotenv
 
 load_dotenv()
 
-MODEL = "claude-sonnet-4-6"
+# Override with the GEMINI_MODEL env var if Google renames or retires this one.
+# The extras below are tried in order if the primary model id is rejected, so a
+# model rename never silently kills the morning briefing.
+MODEL = os.environ.get("GEMINI_MODEL") or "gemini-3.6-flash"
+FALLBACK_MODELS = ["gemini-3.5-flash", "gemini-2.5-flash"]
 
 SYSTEM = """You are a personal daily-briefing assistant. You receive raw email, calendar, and news data and produce a single JSON object that powers a Markdown briefing.
 
@@ -51,7 +57,11 @@ Rules:
 
 
 def classify(emails: list[dict], calendar: list[dict], news: list[dict]) -> dict:
-    client = Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+    api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+    if not api_key:
+        raise RuntimeError("GEMINI_API_KEY is not set")
+
+    client = genai.Client(api_key=api_key)
 
     payload = {
         "emails": emails,
@@ -59,16 +69,38 @@ def classify(emails: list[dict], calendar: list[dict], news: list[dict]) -> dict
         "news": news,
     }
 
-    msg = client.messages.create(
-        model=MODEL,
-        max_tokens=4096,
-        system=SYSTEM,
-        messages=[{
-            "role": "user",
-            "content": "Here is today's raw data. Produce the JSON.\n\n" + json.dumps(payload, indent=2),
-        }],
+    config = types.GenerateContentConfig(
+        system_instruction=SYSTEM,
+        response_mime_type="application/json",
+        max_output_tokens=8192,
+        temperature=0.2,
     )
-    text = msg.content[0].text.strip()
+    contents = "Here is today's raw data. Produce the JSON.\n\n" + json.dumps(payload, indent=2)
+
+    last_error = None
+    for model in [MODEL, *(m for m in FALLBACK_MODELS if m != MODEL)]:
+        try:
+            resp = client.models.generate_content(
+                model=model,
+                contents=contents,
+                config=config,
+            )
+        except Exception as e:
+            # A wrong/retired model id shows up as a 404 NOT_FOUND; try the next.
+            if "NOT_FOUND" in str(e) or "not found" in str(e).lower():
+                last_error = e
+                print(f"[warn] model {model} unavailable, trying next", file=sys.stderr)
+                continue
+            raise
+        if model != MODEL:
+            print(f"[warn] fell back to model {model}", file=sys.stderr)
+        return _parse(resp.text)
+
+    raise RuntimeError(f"No usable Gemini model. Last error: {last_error}")
+
+
+def _parse(text: str) -> dict:
+    text = (text or "").strip()
     # Strip code fences if the model added them anyway
     text = re.sub(r"^```(?:json)?\s*|\s*```$", "", text, flags=re.MULTILINE).strip()
     return json.loads(text)

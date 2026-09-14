@@ -2,7 +2,7 @@
 
 Usage:
   python briefing.py              # live
-  python briefing.py --dry-run    # sample data, still hits Claude
+  python briefing.py --dry-run    # sample data, still hits Gemini
 """
 import argparse
 import sys
@@ -135,7 +135,7 @@ def main():
         print(f"  {len(news)} headlines")
         emails = gmail + outlook
 
-    print("Classifying with Claude...")
+    print("Classifying with Gemini...")
     from classifier import classify
     result = classify(emails, calendar, news)
 
