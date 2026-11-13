@@ -1,16 +1,19 @@
 # Daily Briefing
 
-Sends a daily briefing email at **10:00 AM Nepal Time (04:15 UTC)** with unread Gmail
-across one or more accounts, today's calendar, and news headlines, summarized by Google Gemini.
-Runs on GitHub Actions ([.github/workflows/daily-briefing.yml](.github/workflows/daily-briefing.yml));
-replies to the briefing are processed every 30 minutes by
-[process_replies.yml](.github/workflows/process_replies.yml).
+An automation that reads my inboxes so I don't have to. Every morning it emails me one
+summary: unread Gmail across several accounts, today's calendar, and news headlines,
+sorted and summarized by Google Gemini.
+
+**Stack:** Python · Gmail & Google Calendar APIs · Microsoft Graph · Gemini API · GitHub Actions
+
+Sends at **7:00 AM Nepal Time (01:15 UTC)**. Runs on GitHub Actions
+([.github/workflows/daily_briefing.yml](.github/workflows/daily_briefing.yml)).
 
 ## Scheduling
 
-GitHub fires scheduled workflows late (hours, on this repo), so the briefing is queued
-early at 01:45 UTC and a wait step holds the run until exactly 04:15 UTC
-(= 10:00 AM Nepal Time, UTC+5:45) before sending.
+GitHub starts scheduled workflows hours late on this repo, so the run is queued the
+evening before (21:00 UTC) and a wait step holds it until 01:15 UTC
+(= 7:00 AM Nepal Time, UTC+5:45) before sending.
 
 ## Setup
 
